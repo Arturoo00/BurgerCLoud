@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burger Cloud - Nuestra Carta</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="images/kpmg-logo-0-768x768.png" type="image/png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/kpmg-logo-0-768x768.png" alt="NTTDATA Logo" id="logo">
+            <h1>Burger Cloud</h1>
+        </div>
+        <nav id="main-nav">
+            <ul>
+                <li><a href="index.html" class="active">Carta</a></li>
+                <li><a href="login.html" id="nav-login">Login</a></li>
+                <li><a href="register.html" id="nav-register">Registro</a></li>
+                <li><a href="perfil.html" id="nav-profile" class="hidden">Mi Perfil</a></li>
+                <li><a href="personal.html" id="nav-personal" class="hidden">Personal NTTDATA</a></li>
+                <li><a href="#" id="nav-logout" class="hidden">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Nuestras Hamburguesas</h2>
+            <div class="filter-controls">
+                <label for="type-filter">Filtrar por tipo:</label>
+                <select id="type-filter">
+                    <option value="all">Todas</option>
+                    <option value="classic">Clásicas</option>
+                    <option value="bbq">BBQ</option>
+                    <option value="veggie">Vegetarianas</option>
+                    <option value="gourmet">Gourmet</option>
+                </select>
+            </div>
+
+            <div id="burger-grid-loader" class="loader"></div>
+            <div id="burger-grid" class="burger-grid">
+                <!-- Las hamburguesas se cargarán aquí por JS -->
+            </div>
+
+            <div id="cart-summary" class="hidden">
+                <h2>Tu Pedido Actual</h2>
+                <ul id="cart-items-list"></ul>
+                <p><strong>Total: <span id="cart-total">0.00</span> €</strong></p>
+                <button id="checkout-button" class="btn btn-primary">Realizar Pedido</button>
+                <div id="order-message-placeholder"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2024 NTTDATA Burger. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="js/api.js"></script> <!-- Simulación Backend -->
+    <script src="js/app.js"></script>   <!-- Lógica Frontend -->
+</body>
+</html>

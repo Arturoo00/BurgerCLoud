@@ -1,0 +1,14 @@
+nttdata-burger/
+├── index.html               # Página principal (carta de hamburguesas, filtros)
+├── login.html               # Página de inicio de sesión
+├── register.html            # Página de registro
+├── perfil.html              # Página del usuario (mis pedidos, mis likes)
+├── personal.html            # Página para personal de NTTDATA (documentos, imágenes)
+├── css/
+│   └── style.css            # Estilos generales
+├── js/
+│   └── app.js               # Lógica principal de la aplicación (frontend)
+│   └── api.js               # Simulación de la API J2EE (backend mock)
+└── images/                  # Para imágenes estáticas (logo, etc.)
+    └── nttdata_logo.png     # (Deberás conseguir un logo de NTTDATA)
+    └── burger_placeholder.png # Placeholder si una imagen de hamburguesa falla
