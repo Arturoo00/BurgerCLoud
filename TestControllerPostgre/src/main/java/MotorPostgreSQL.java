@@ -35,7 +35,7 @@ public class MotorPostgreSQL extends MotorSQLA { // MotorSQLA ya tiene 'protecte
 
             // 3. Establecer la URL de conexión completa
             // Asegúrate que el puerto es 5432 si no lo especificas (es el default para PostgreSQL)
-            String url = "jdbc:postgresql://postgrespring.c9aqgoyi6x61.us-east-1.rds.amazonaws.com/postgres";
+            String url = "jdbc:postgresql://burgercloud.cb6uae60clhm.us-east-1.rds.amazonaws.com/postgres";
             System.out.println("URL de conexión: " + url);
 
             // 4. Obtener la conexión
