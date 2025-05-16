@@ -27,7 +27,7 @@ public class MotorPostgreSQL extends MotorSQLA { // MotorSQLA ya tiene 'protecte
             // 2. Configurar propiedades de conexión
             Properties properties = new Properties();
             properties.setProperty("user", "postgres");
-            properties.setProperty("password", "LUCASLUCAS");
+            properties.setProperty("password", "pato789456123");
             properties.setProperty("ssl", "false");
             // Opcional: timeouts de conexión para evitar bloqueos indefinidos
             // properties.setProperty("loginTimeout", "10"); // 10 segundos
