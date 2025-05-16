@@ -1,6 +1,10 @@
-//ControllerServerlet
+package com.example.controller;
 
-// Preferiblemente en un paquete como com.example.controller
+import com.example.dao.HamburguesaDAO;
+import com.example.db.FactoryMotorSQL;
+import com.example.db.IMotorSQL;
+import com.example.model.Hamburguesa;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -8,24 +12,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays; // For Arrays.toString if needed for debugging, not for JSON
 import java.util.List;
 
-// Importa tus clases (ajusta paquetes si es necesario)
-// import com.example.dao.FactoryMotorSQL;
-// import com.example.dao.HamburguesaDAO;
-// import com.example.dao.IMotorSQL;
-// import com.example.model.Hamburguesa;
-// Opcional: para Gson
+// Optional: for Gson
 // import com.google.gson.Gson;
+// import com.google.gson.GsonBuilder;
 
-
-// La anotación @WebServlet mapea esta clase a la URL /Controller
-// El nombre de tu aplicación web (WAR) será el prefijo, ej: /TestControllerPostgre/Controller
 @WebServlet("/Controller")
 public class ControllerServlet extends HttpServlet {
 
     private static final String ACTION_PARAM = "ACTION";
     private static final String HAMBURGUESA_LIST_ACTION = "HAMBURGUESA.LIST";
+    // private static final Gson gson = new GsonBuilder().create(); // Create Gson instance once
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -42,7 +41,7 @@ public class ControllerServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("application/json"); // Por defecto, o text/plain si no usas JSON
+        response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
@@ -55,13 +54,12 @@ public class ControllerServlet extends HttpServlet {
             return;
         }
 
-        System.out.println("Acción recibida: " + action); // Para depuración
+        System.out.println("Acción recibida: " + action);
 
         IMotorSQL motorSQL = null;
         HamburguesaDAO hamburguesaDAO = null;
 
         try {
-            // Usamos el Factory para obtener el motor PostgreSQL
             motorSQL = FactoryMotorSQL.getIntance(FactoryMotorSQL.POSTGRE);
             if (motorSQL == null) {
                 System.err.println("Error: FactoryMotorSQL devolvió null para POSTGRE.");
@@ -71,27 +69,49 @@ public class ControllerServlet extends HttpServlet {
                 return;
             }
 
-            hamburguesaDAO = new HamburguesaDAO(motorSQL);
+            hamburguesaDAO = new HamburguesaDAO(motorSQL); // This will call motorSQL.conectar()
 
             switch (action.toUpperCase()) {
                 case HAMBURGUESA_LIST_ACTION:
                     List<Hamburguesa> hamburguesas = hamburguesaDAO.listarHamburguesas();
 
-                    // Usando Gson (opcional, más robusto)
-                    // Gson gson = new Gson();
+                    // --- Using Gson (Recommended) ---
                     // String jsonResponse = gson.toJson(hamburguesas);
                     // out.print(jsonResponse);
 
-                    // Conversión manual a JSON (simple)
+                    // --- Manual JSON construction (Updated) ---
                     StringBuilder jsonBuilder = new StringBuilder();
                     jsonBuilder.append("[");
                     for (int i = 0; i < hamburguesas.size(); i++) {
                         Hamburguesa h = hamburguesas.get(i);
                         jsonBuilder.append("{");
                         jsonBuilder.append("\"id\":").append(h.getId()).append(",");
-                        jsonBuilder.append("\"nombre\":\"").append(escapeJson(h.getNombre())).append("\",");
-                        jsonBuilder.append("\"precio\":").append(h.getPrecio()).append(",");
-                        jsonBuilder.append("\"descripcion\":\"").append(escapeJson(h.getDescripcion())).append("\"");
+                        jsonBuilder.append("\"name\":\"").append(escapeJson(h.getNombre())).append("\","); // Changed to name
+                        jsonBuilder.append("\"description\":\"").append(escapeJson(h.getDescripcion())).append("\",");
+                        jsonBuilder.append("\"price\":").append(h.getPrecio()).append(",");
+                        jsonBuilder.append("\"imageUrl\":\"").append(escapeJson(h.getImageUrl())).append("\",");
+                        jsonBuilder.append("\"type\":\"").append(escapeJson(h.getType())).append("\",");
+
+                        jsonBuilder.append("\"ingredients\":[");
+                        String[] ingredients = h.getIngredients();
+                        if (ingredients != null) {
+                            for (int j = 0; j < ingredients.length; j++) {
+                                jsonBuilder.append("\"").append(escapeJson(ingredients[j])).append("\"");
+                                if (j < ingredients.length - 1) {
+                                    jsonBuilder.append(",");
+                                }
+                            }
+                        }
+                        jsonBuilder.append("],");
+
+                        jsonBuilder.append("\"totalScore\":").append(h.getTotalScore()).append(",");
+                        jsonBuilder.append("\"ratingCount\":").append(h.getRatingCount()).append(",");
+                        // Calculate average rating - ensure ratingCount is not zero
+                        double averageRating = (h.getRatingCount() > 0) ? (double) h.getTotalScore() / h.getRatingCount() : 0.0;
+                        // Format averageRating to one decimal place
+                        jsonBuilder.append("\"averageRating\":").append(String.format("%.1f", averageRating).replace(",", "."));
+
+
                         jsonBuilder.append("}");
                         if (i < hamburguesas.size() - 1) {
                             jsonBuilder.append(",");
@@ -101,37 +121,27 @@ public class ControllerServlet extends HttpServlet {
                     out.print(jsonBuilder.toString());
                     break;
 
-                // Puedes añadir más casos para otras acciones
-                // case "HAMBURGUESA.ADD":
-                // ...
-                // break;
-
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    out.print("{\"error\":\"Acción desconocida: " + action + "\"}");
+                    out.print("{\"error\":\"Acción desconocida: " + escapeJson(action) + "\"}");
                     break;
             }
 
         } catch (Exception e) {
-            e.printStackTrace(); // Importante para ver errores en la consola del servidor
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"error\":\"Error procesando la solicitud: " + e.getMessage() + "\"}");
+            // Be careful about exposing raw exception messages to clients
+            out.print("{\"error\":\"Error procesando la solicitud. Revise los logs del servidor.\"}");
         } finally {
             out.flush();
-            // Aquí podrías considerar cerrar la conexión si el motorSQL
-            // no la gestiona automáticamente o si no usas un pool de conexiones.
-            // Por ejemplo, si IMotorSQL tuviera un método close():
-            // if (motorSQL != null && motorSQL.getConnection() != null) {
-            //     try {
-            //         motorSQL.getConnection().close();
-            //     } catch (SQLException ex) {
-            //         ex.printStackTrace();
-            //     }
-            // }
+            // The connection is typically managed by the motorSQL instance or a connection pool.
+            // If MotorSQLA or MotorPostgreSQL handles closing in a more sophisticated way (e.g. via a ServletContextListener or filter for web apps),
+            // you might not need to do anything here. For simple cases, the connection might remain open until the app stops or the motor is GC'd.
+            // For web apps, it's better to manage connections per request or use a connection pool.
+            // For now, relying on HamburguesaDAO and MotorPostgreSQL to handle connect/disconnect if needed.
         }
     }
 
-    // Helper simple para escapar strings para JSON
     private String escapeJson(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\")
@@ -145,6 +155,6 @@ public class ControllerServlet extends HttpServlet {
 
     @Override
     public String getServletInfo() {
-        return "Servlet controlador principal";
+        return "Servlet controlador principal para Burger Cloud";
     }
 }

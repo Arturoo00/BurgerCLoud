@@ -1,203 +1,177 @@
 // js/api.js
 
-// Simulación de la base de datos en memoria
-const mockDatabase = {
-    users: [
-        { id: 1, username: 'admin_nttdata', password_hash: 'hashed_password_admin', email: 'admin@nttdata.burger', role: 'admin', created_at: new Date().toISOString() },
-        { id: 2, username: 'cliente_juan', password_hash: 'hashed_password_juan', email: 'juan.perez@email.com', role: 'client', created_at: new Date().toISOString() },
-        { id: 3, username: 'cliente_ana', password_hash: 'hashed_password_ana', email: 'ana.gomez@email.com', role: 'client', created_at: new Date().toISOString() }
-    ],
-    burgers: [
-        { id: 1, name: 'NTTDATA Classic', description: 'La auténtica experiencia NTTDATA con carne de vacuno premium, queso cheddar fundido, lechuga fresca y tomate en pan clásico.', price: 10.50, image_url: 'https://via.placeholder.com/300x200/00A0E0/FFFFFF?text=NTTDATA+Classic', type: 'classic', ingredients: ['Carne de Vacuno', 'Queso Cheddar', 'Lechuga', 'Tomate', 'Pan Clásico', 'Salsa Especial NTTDATA'], total_score: 9, rating_count: 2 },
-        { id: 2, name: 'Cloud BBQ Beast', description: 'Una bestia de sabor con doble carne, bacon crujiente, cebolla caramelizada y nuestra salsa BBQ secreta en pan brioche.', price: 13.75, image_url: 'https://via.placeholder.com/300x200/3E4B5B/FFFFFF?text=Cloud+BBQ', type: 'bbq', ingredients: ['Carne de Vacuno', 'Bacon', 'Cebolla Caramelizada', 'Salsa BBQ', 'Pan Brioche'], total_score: 14, rating_count: 3 },
-        { id: 3, name: 'Veggie Innovator', description: 'Deliciosa hamburguesa vegana a base de champiñones portobello, con aguacate, rúcula y un toque de nuestra salsa especial NTTDATA en pan integral.', price: 11.25, image_url: 'https://via.placeholder.com/300x200/7DBB00/FFFFFF?text=Veggie+Innovator', type: 'veggie', ingredients: ['Hamburguesa Vegana', 'Champiñones Portobello', 'Aguacate', 'Rúcula', 'Pan Integral'], total_score: 4, rating_count: 1 },
-        { id: 4, name: 'Gourmet Consultant', description: 'Para paladares exigentes: carne de vacuno madurada, queso de cabra, rúcula y cebolla caramelizada en pan brioche artesanal.', price: 15.00, image_url: 'https://via.placeholder.com/300x200/A4007A/FFFFFF?text=Gourmet+Consultant', type: 'gourmet', ingredients: ['Carne de Vacuno Madurada', 'Queso de Cabra', 'Rúcula', 'Cebolla Caramelizada', 'Pan Brioche Artesanal'], total_score: 8, rating_count: 2 },
-        { id: 5, name: 'The Intern Special', description: 'Simple y efectiva. Carne, queso y pan. ¡Directo al grano!', price: 8.00, image_url: 'https://via.placeholder.com/300x200/FF7F00/FFFFFF?text=Intern+Special', type: 'classic', ingredients: ['Carne de Vacuno', 'Queso Americano', 'Pan Clásico'], total_score: 0, rating_count: 0 }
-    ],
-    ratings: [
-        { id: 1, burger_id: 1, user_id: 2, score: 5, created_at: new Date().toISOString() },
-        { id: 2, burger_id: 1, user_id: 3, score: 4, created_at: new Date().toISOString() },
-        { id: 3, burger_id: 2, user_id: 2, score: 5, created_at: new Date().toISOString() },
-        { id: 4, burger_id: 2, user_id: 1, score: 5, created_at: new Date().toISOString() },
-        { id: 5, burger_id: 2, user_id: 3, score: 4, created_at: new Date().toISOString() },
-        { id: 6, burger_id: 3, user_id: 3, score: 4, created_at: new Date().toISOString() },
-        { id: 7, burger_id: 4, user_id: 2, score: 5, created_at: new Date().toISOString() },
-        { id: 8, burger_id: 4, user_id: 1, score: 3, created_at: new Date().toISOString() }
-    ],
-    // Simulación de pedidos (no persistente entre sesiones si no se usa localStorage en api.js)
-    orders: [],
-    // Simulación de documentos/imágenes para la página de personal
-    companyMedia: {
-        images: [
-            { id: 1, title: "Oficina NTTDATA Madrid", url: "https://via.placeholder.com/400x250/00A0E0/FFFFFF?text=Oficina+Madrid" },
-            { id: 2, title: "Equipo de Desarrollo", url: "https://via.placeholder.com/400x250/3E4B5B/FFFFFF?text=Equipo+Desarrollo" }
-        ],
-        documents: [
-            { id: 1, title: "Informe Anual 2023", url: "#", type: "PDF" },
-            { id: 2, title: "Guía de Bienvenida", url: "#", type: "DOCX" }
-        ]
-    }
-};
+// const API_BASE_URL = '/BurgerCloudApp/Controller'; // Example: Replace BurgerCloudApp with your app's context path
+// We'll get this from app.js or define it more globally if needed.
 
-// Simula una demora de red
-const simulateNetworkDelay = (data) => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve(data);
-        }, Math.random() * 500 + 200); // Entre 200ms y 700ms
-    });
-};
+// Helper function for making API calls
+async function fetchFromBackend(action, params = {}, method = 'GET', body = null) {
+    // This should be configured to your actual backend URL
+    // It's often better to set this in app.js or a config file
+    const J2EE_CONTROLLER_URL = 'http://localhost:8080/TestControllerPostgre/Controller'; // <<<< IMPORTANT: SET THIS TO YOUR ACTUAL URL
 
-// --- Endpoints Simulados ---
+    let url = `${J2EE_CONTROLLER_URL}?ACTION=${encodeURIComponent(action)}`;
 
-// J2EE endpoint: /api/users/register
-async function registerUser(username, password, email, role = 'client') {
-    console.log("API_MOCK: registerUser called with", { username, password, email, role });
-    return simulateNetworkDelay().then(() => {
-        if (mockDatabase.users.find(u => u.username === username)) {
-            return { success: false, message: "El nombre de usuario ya existe." };
-        }
-        if (mockDatabase.users.find(u => u.email === email)) {
-            return { success: false, message: "El email ya está registrado." };
-        }
-        const newUser = {
-            id: mockDatabase.users.length + 1,
-            username,
-            password_hash: `hashed_${password}`, // Simulación de hash
-            email,
-            role,
-            created_at: new Date().toISOString()
-        };
-        mockDatabase.users.push(newUser);
-        console.log("API_MOCK: New user added", newUser);
-        return { success: true, user: { id: newUser.id, username: newUser.username, email: newUser.email, role: newUser.role } };
-    });
-}
+    const options = {
+        method: method,
+        headers: {
+            // 'Content-Type': 'application/json' // For JSON body
+            // For form data (default for GET, or when using FormData for POST)
+        },
+    };
 
-// J2EE endpoint: /api/users/login
-async function loginUser(username, password) {
-    console.log("API_MOCK: loginUser called with", { username, password });
-    return simulateNetworkDelay().then(() => {
-        const user = mockDatabase.users.find(u => u.username === username);
-        // En una app real, el backend compararía el hash de la contraseña
-        if (user && user.password_hash === `hashed_${password}`) {
-            console.log("API_MOCK: Login successful for", username);
-            return { success: true, user: { id: user.id, username: user.username, email: user.email, role: user.role, token: `mock_jwt_token_for_${user.id}` } };
-        }
-        console.log("API_MOCK: Login failed for", username);
-        return { success: false, message: "Usuario o contraseña incorrectos." };
-    });
-}
-
-// J2EE endpoint: /api/burgers
-async function getBurgers(filterType = null) {
-    console.log("API_MOCK: getBurgers called with filter:", filterType);
-    return simulateNetworkDelay().then(() => {
-        let burgers = mockDatabase.burgers.map(b => ({
-            ...b,
-            avg_rating: b.rating_count > 0 ? (b.total_score / b.rating_count).toFixed(1) : 0,
-            // Aseguramos que ingredients siempre sea un array
-            ingredients: Array.isArray(b.ingredients) ? b.ingredients : (b.ingredients ? [b.ingredients] : [])
-        }));
-        if (filterType && filterType !== "all") {
-            burgers = burgers.filter(b => b.type === filterType);
-        }
-        console.log("API_MOCK: Returning burgers:", burgers.length);
-        return { success: true, data: burgers };
-    });
-}
-
-// J2EE endpoint: /api/burgers/{burgerId}/rate
-async function rateBurger(burgerId, userId, score) {
-    console.log("API_MOCK: rateBurger called with", { burgerId, userId, score });
-    return simulateNetworkDelay().then(() => {
-        const burger = mockDatabase.burgers.find(b => b.id === burgerId);
-        const user = mockDatabase.users.find(u => u.id === userId);
-
-        if (!burger || !user) {
-            return { success: false, message: "Hamburguesa o usuario no encontrado." };
-        }
-
-        let existingRating = mockDatabase.ratings.find(r => r.burger_id === burgerId && r.user_id === userId);
-
-        if (existingRating) {
-            // Actualizar puntuación existente y total_score/rating_count de la hamburguesa
-            burger.total_score = burger.total_score - existingRating.score + score;
-            existingRating.score = score;
-            existingRating.created_at = new Date().toISOString();
-        } else {
-            // Nueva puntuación
-            mockDatabase.ratings.push({
-                id: mockDatabase.ratings.length + 1,
-                burger_id: burgerId,
-                user_id: userId,
-                score,
-                created_at: new Date().toISOString()
-            });
-            burger.total_score += score;
-            burger.rating_count += 1;
-        }
-        console.log("API_MOCK: Burger rated/updated", burger);
-        return { success: true, message: "Puntuación registrada.", burger };
-    });
-}
-
-// J2EE endpoint: /api/users/{userId}/ratings
-async function getUserRatings(userId) {
-    console.log("API_MOCK: getUserRatings called for user:", userId);
-    return simulateNetworkDelay().then(() => {
-        const ratings = mockDatabase.ratings.filter(r => r.user_id === userId);
-        const ratedBurgers = ratings.map(r => {
-            const burger = mockDatabase.burgers.find(b => b.id === r.burger_id);
-            return { ...burger, user_score: r.score };
+    if (method === 'GET') {
+        Object.keys(params).forEach(key => {
+            if (params[key] !== undefined && params[key] !== null) {
+                 url += `&${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
+            }
         });
-        console.log("API_MOCK: Returning user ratings:", ratedBurgers.length);
-        return { success: true, data: ratedBurgers };
-    });
-}
-
-// J2EE endpoint: /api/orders (POST)
-async function placeOrder(userId, items) { // items: [{ burgerId, quantity, price }]
-    console.log("API_MOCK: placeOrder called for user:", userId, "with items:", items);
-    return simulateNetworkDelay().then(() => {
-        if (!mockDatabase.users.find(u => u.id === userId)) {
-            return { success: false, message: "Usuario no encontrado." };
+    } else if (method === 'POST') {
+        // For POST, parameters are typically sent in the body
+        // We'll use URL-encoded form data as the J2EE servlet expects request.getParameter()
+        options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        const bodyParams = new URLSearchParams();
+        bodyParams.append('ACTION', action); // Action also in body for POST consistency or if preferred
+        for (const key in params) {
+            if (params.hasOwnProperty(key) && params[key] !== undefined && params[key] !== null) {
+                bodyParams.append(key, params[key]);
+            }
         }
-        const orderId = `order_${Date.now()}_${userId}`;
-        const newOrder = {
-            id: orderId,
-            userId,
-            items,
-            total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            status: "pending",
-            createdAt: new Date().toISOString()
-        };
-        mockDatabase.orders.push(newOrder);
-        console.log("API_MOCK: Order placed", newOrder);
-        return { success: true, message: "Pedido realizado con éxito.", order: newOrder };
-    });
+        if (body) { // If a specific body object is provided (e.g. JSON string for complex data)
+            if (typeof body === 'object') {
+                 // If we want to send JSON, uncomment the Content-Type above and use this
+                 // options.body = JSON.stringify(body);
+                 // For now, sticking to form-urlencoded, so we'd add body's props to bodyParams
+                 console.warn("Raw 'body' object passed to POST with form-urlencoded, ensure params handle it or adjust Content-Type");
+            } else {
+                // This case is less common if `params` are already handling form data
+                // options.body = body;
+            }
+        }
+        options.body = bodyParams.toString();
+        // For POST, the ACTION is part of the body, so remove it from query string.
+        url = J2EE_CONTROLLER_URL;
+    }
+
+    console.log(`API CALL: ${method} ${url}`, params, body ? `Body: ${options.body}` : '');
+
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            // Try to get error message from backend if available
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                // Not JSON or empty response
+                errorData = { message: `Error ${response.status}: ${response.statusText}` };
+            }
+            console.error('API Error Response:', errorData);
+            return { success: false, message: errorData.message || `Server error: ${response.status}` };
+        }
+        // The J2EE servlet for HAMBURGUESA.LIST returns an array directly.
+        // Other actions should return an object like { success: true, data: ... } or { success: false, message: ... }
+        // We need to standardize this here.
+        const responseData = await response.json();
+        console.log('API Success Response Data:', responseData);
+
+        // If backend returns data directly (like HAMBURGUESA.LIST), wrap it
+        if (Array.isArray(responseData) && action === 'HAMBURGUESA.LIST') {
+            return { success: true, data: responseData };
+        }
+        // If backend already returns {success: ..., data: ...} or {success: ..., message: ...}
+        if (typeof responseData.success === 'boolean') {
+            return responseData;
+        }
+        // Fallback if the structure is unknown but request was ok (status 2xx)
+        return { success: true, data: responseData };
+
+    } catch (error) {
+        console.error('Network or other API error:', error);
+        return { success: false, message: `Network error: ${error.message}` };
+    }
 }
 
-// J2EE endpoint: /api/users/{userId}/orders (GET)
+
+// --- Endpoints Mapped to J2EE Actions ---
+
+async function registerUser(username, password, email, role = 'client') {
+    // J2EE ACTION: USER.REGISTER (Needs to be implemented in ControllerServlet)
+    // Assuming POST request with username, password, email
+    return await fetchFromBackend('USER.REGISTER', { username, password, email, role }, 'POST');
+}
+
+async function loginUser(username, password) {
+    // J2EE ACTION: USER.LOGIN (Needs to be implemented in ControllerServlet)
+    // Assuming POST request with username, password
+    return await fetchFromBackend('USER.LOGIN', { username, password }, 'POST');
+}
+
+async function getBurgers(filterType = null) {
+    // J2EE ACTION: HAMBURGUESA.LIST
+    // The current J2EE servlet returns all burgers. Filtering is client-side in app.js.
+    // To keep app.js simple, we fetch all and then filter here, or let app.js continue to filter.
+    // For now, let's fetch all and let app.js filter.
+    // If server-side filtering is added, the `filterType` param would be sent.
+    const response = await fetchFromBackend('HAMBURGUESA.LIST');
+    if (response.success && Array.isArray(response.data)) {
+        // The J2EE servlet returns "name", "description", "price", "imageUrl", "type", "ingredients", "totalScore", "ratingCount", "averageRating"
+        // Ensure ingredients is always an array
+        const burgers = response.data.map(b => ({
+            ...b,
+            ingredients: Array.isArray(b.ingredients) ? b.ingredients : (b.ingredients ? [b.ingredients.toString()] : []),
+            // J2EE servlet now calculates and returns averageRating
+            avg_rating: b.averageRating !== undefined ? parseFloat(b.averageRating).toFixed(1) : (b.ratingCount > 0 ? (b.totalScore / b.ratingCount).toFixed(1) : "0.0")
+        }));
+
+        if (filterType && filterType !== "all") {
+            return { success: true, data: burgers.filter(b => b.type === filterType) };
+        }
+        return { success: true, data: burgers };
+    }
+    return response; // Return original error response if not successful
+}
+
+
+async function rateBurger(burgerId, userId, score) {
+    // J2EE ACTION: BURGER.RATE (Needs to be implemented in ControllerServlet)
+    // Assuming POST request with burgerId, userId, score
+    return await fetchFromBackend('BURGER.RATE', { burgerId, userId, score }, 'POST');
+}
+
+async function getUserRatings(userId) {
+    // J2EE ACTION: USER.RATINGS (Needs to be implemented in ControllerServlet)
+    // Assuming GET request with userId
+    return await fetchFromBackend('USER.RATINGS', { userId }, 'GET');
+}
+
+async function placeOrder(userId, items) { // items: [{ burgerId, name, quantity, price }]
+    // J2EE ACTION: ORDER.PLACE (Needs to be implemented in ControllerServlet)
+    // Assuming POST request with userId and items (e.g., as JSON string)
+    // The J2EE servlet will need to parse this JSON string from a parameter.
+    return await fetchFromBackend('ORDER.PLACE', { userId, itemsJson: JSON.stringify(items) }, 'POST');
+}
+
 async function getUserOrders(userId) {
-    console.log("API_MOCK: getUserOrders called for user:", userId);
-    return simulateNetworkDelay().then(() => {
-        const userOrders = mockDatabase.orders.filter(o => o.userId === userId);
-        console.log("API_MOCK: Returning user orders:", userOrders.length);
-        return { success: true, data: userOrders };
-    });
+    // J2EE ACTION: USER.ORDERS (Needs to be implemented in ControllerServlet)
+    // Assuming GET request with userId
+    return await fetchFromBackend('USER.ORDERS', { userId }, 'GET');
 }
 
-// J2EE endpoint: /api/company/media
 async function getCompanyMedia() {
-    console.log("API_MOCK: getCompanyMedia called");
-    return simulateNetworkDelay().then(() => {
-        return { success: true, data: mockDatabase.companyMedia };
-    });
+    // J2EE ACTION: COMPANY.MEDIA (Needs to be implemented in ControllerServlet)
+    // Assuming GET request, no params
+    // Backend should return: { images: [...], documents: [...] }
+    const response = await fetchFromBackend('COMPANY.MEDIA');
+    if (response.success && response.data && response.data.images && response.data.documents) {
+        return response; // Already in the expected format
+    } else if(response.success) { // Data structure mismatch
+        console.warn("COMPANY.MEDIA response from backend has unexpected structure:", response.data);
+        return { success: false, message: "Formato de datos de media incorrecto desde el servidor."}
+    }
+    return response; // Return original error
 }
 
-// Exportar funciones para que app.js pueda usarlas
-// En un entorno real, no se exportarían así, app.js haría `fetch`
+// Expose functions to app.js
 window.api = {
     registerUser,
     loginUser,

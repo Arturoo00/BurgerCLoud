@@ -1,12 +1,16 @@
+package com.example.db; // Make sure this is in the correct package
+
 import java.sql.DriverManager;
-import java.sql.SQLException; // Importa SQLException para un manejo más específico
+import java.sql.SQLException;
 import java.util.Properties;
 
-public class MotorPostgreSQL extends MotorSQLA { // MotorSQLA ya tiene 'protected Connection conn;'
+// Assuming MotorSQLA is in the same package or imported correctly
+// import com.example.db.MotorSQLA;
+
+public class MotorPostgreSQL extends MotorSQLA {
 
     @Override
     public void conectar() {
-        // Evitar reconexiones si ya está conectado y la conexión es válida
         try {
             if (this.conn != null && !this.conn.isClosed()) {
                 System.out.println("Ya conectado a PostgreSQL y la conexión es válida.");
@@ -14,57 +18,47 @@ public class MotorPostgreSQL extends MotorSQLA { // MotorSQLA ya tiene 'protecte
             }
         } catch (SQLException e) {
             System.err.println("Error verificando estado de conexión existente: " + e.getMessage());
-            // Proceder a (re)conectar
         }
 
-        System.out.println("Intentando conectar a PostgreSQL..."); // Mensaje de inicio
+        System.out.println("Intentando conectar a PostgreSQL...");
 
         try {
-            // 1. Cargar el driver
             Class.forName("org.postgresql.Driver");
             System.out.println("Driver PostgreSQL cargado exitosamente.");
 
-            // 2. Configurar propiedades de conexión
             Properties properties = new Properties();
+            // THESE ARE YOUR CREDENTIALS FROM THE FILE
             properties.setProperty("user", "postgres");
-            properties.setProperty("password", "pato789456123");
-            properties.setProperty("ssl", "false");
-            // Opcional: timeouts de conexión para evitar bloqueos indefinidos
-            // properties.setProperty("loginTimeout", "10"); // 10 segundos
-            // properties.setProperty("connectTimeout", "10"); // 10 segundos
+            properties.setProperty("password", "pato789456123"); // Your password
+            properties.setProperty("ssl", "false"); // Or "true" if SSL is configured and required
 
-            // 3. Establecer la URL de conexión completa
-            // Asegúrate que el puerto es 5432 si no lo especificas (es el default para PostgreSQL)
+            // YOUR RDS ENDPOINT
             String url = "jdbc:postgresql://burgercloud.cb6uae60clhm.us-east-1.rds.amazonaws.com/postgres";
             System.out.println("URL de conexión: " + url);
 
-            // 4. Obtener la conexión
             this.conn = DriverManager.getConnection(url, properties);
 
-            // 5. Verificar la conexión
             if (this.conn != null && !this.conn.isClosed()) {
                 System.out.println("¡Conectado exitosamente a PostgreSQL!");
             } else {
-                // Esto no debería ocurrir si DriverManager.getConnection no lanza excepción,
-                // pero es una doble verificación.
                 System.err.println("Error crítico: DriverManager.getConnection devolvió null o una conexión cerrada sin lanzar excepción.");
-                this.conn = null; // Asegurar que conn sea null si algo raro pasó
+                this.conn = null;
             }
 
         } catch (ClassNotFoundException e) {
             System.err.println("ERROR FATAL: Driver PostgreSQL (org.postgresql.Driver) no encontrado en el classpath.");
-            e.printStackTrace(); // Imprime el stack trace completo
-            this.conn = null; // Asegurar que conn sea null
+            e.printStackTrace();
+            this.conn = null;
         } catch (SQLException e) {
             System.err.println("ERROR SQL al intentar conectar a PostgreSQL: " + e.getMessage());
             System.err.println("SQLState: " + e.getSQLState());
             System.err.println("Error Code: " + e.getErrorCode());
-            e.printStackTrace(); // Imprime el stack trace completo
-            this.conn = null; // Asegurar que conn sea null
-        } catch (Exception e) { // Captura cualquier otra excepción inesperada
+            e.printStackTrace();
+            this.conn = null;
+        } catch (Exception e) {
             System.err.println("ERROR INESPERADO durante la conexión a PostgreSQL: " + e.getMessage());
-            e.printStackTrace(); // Imprime el stack trace completo
-            this.conn = null; // Asegurar que conn sea null
+            e.printStackTrace();
+            this.conn = null;
         }
 
         if (this.conn == null) {
